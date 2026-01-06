@@ -1,18 +1,19 @@
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat 2-osobowy</title>
+  <title>Chat prywatny</title>
   <style>
-    body{font-family:system-ui,sans-serif;background:#111;color:#eee;margin:12px}
-    #messages{min-height:50vh;max-height:70vh;overflow-y:auto;background:#1a1a1a;padding:12px;border-radius:8px;margin-bottom:12px}
-    .msg{margin:6px 0;padding:8px 12px;border-radius:12px;max-width:80%}
-    .sent{background:#0066ff;margin-left:auto}
-    .received{background:#333}
-    #input{display:flex;gap:8px}
-    #msg{flex:1;padding:10px;background:#222;border:none;border-radius:6px;color:#fff}
-    button{padding:10px 16px;background:#0066ff;border:none;border-radius:6px;color:#fff;cursor:pointer}
+    body {font-family:system-ui,sans-serif; background:#111; color:#eee; margin:12px;}
+    #messages {min-height:50vh; max-height:70vh; overflow-y:auto; background:#1a1a1a; padding:12px; border-radius:8px; margin-bottom:12px;}
+    .msg {margin:6px 0; padding:8px 12px; border-radius:12px; max-width:80%;}
+    .sent {background:#0066ff; margin-left:auto;}
+    .received {background:#333;}
+    #input {display:flex; gap:8px;}
+    #msg {flex:1; padding:10px; background:#222; border:none; border-radius:6px; color:white;}
+    button {padding:10px 16px; background:#0066ff; border:none; border-radius:6px; color:white; cursor:pointer;}
   </style>
 </head>
 <body>
@@ -47,8 +48,7 @@ const messagesRef = ref(db, 'chat');
 const messagesDiv = document.getElementById('messages');
 const input = document.getElementById('msg');
 
-let name = localStorage.getItem('chatName') || prompt('Twoja nazwa (widoczna dla drugiej osoby):') || 'Osoba';
-localStorage.setItem('chatName', name);
+const name = "Użytkownik1";   // ← tutaj wpiszcie tę samą nazwę na obu urządzeniach
 
 onValue(messagesRef, snap => {
   messagesDiv.innerHTML = '';
