@@ -1,20 +1,19 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat prywatny</title>
-  <style>
-    body {font-family:system-ui,sans-serif; background:#111; color:#eee; margin:12px;}
-    #messages {min-height:50vh; max-height:70vh; overflow-y:auto; background:#1a1a1a; padding:12px; border-radius:8px; margin-bottom:12px;}
-    .msg {margin:6px 0; padding:8px 12px; border-radius:12px; max-width:80%;}
-    .sent {background:#0066ff; margin-left:auto;}
-    .received {background:#333;}
-    #input {display:flex; gap:8px;}
-    #msg {flex:1; padding:10px; background:#222; border:none; border-radius:6px; color:white;}
-    button {padding:10px 16px; background:#0066ff; border:none; border-radius:6px; color:white; cursor:pointer;}
-  </style>
+<meta charset="UTF-8">
+<title>Chat prywatny</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {font-family:system-ui,sans-serif;background:#111;color:#eee;margin:12px}
+  #messages {min-height:50vh;max-height:70vh;overflow-y:auto;background:#1a1a1a;padding:12px;border-radius:8px;margin-bottom:12px}
+  .msg {margin:6px 0;padding:8px 12px;border-radius:12px;max-width:80%}
+  .sent {background:#0066ff;margin-left:auto}
+  .received {background:#333}
+  #input {display:flex;gap:8px}
+  #msg {flex:1;padding:10px;background:#222;border:none;border-radius:6px;color:#fff}
+  button {padding:10px 16px;background:#0066ff;border:none;border-radius:6px;color:#fff;cursor:pointer}
+</style>
 </head>
 <body>
 
@@ -43,37 +42,55 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const messagesRef = ref(db, 'chat');
+const messagesRef = ref(db, "chat");
 
-const messagesDiv = document.getElementById('messages');
-const input = document.getElementById('msg');
+const messagesDiv = document.getElementById("messages");
+const input = document.getElementById("msg");
 
-const name = "Użytkownik1";   // ← tutaj wpiszcie tę samą nazwę na obu urządzeniach
+const name = "Użytkownik1";  // ta sama na obu urządzeniach
 
-onValue(messagesRef, snap => {
-  messagesDiv.innerHTML = '';
-  snap.forEach(child => {
+let lastSentTime = 0;
+
+onValue(messagesRef, (snap) => {
+  messagesDiv.innerHTML = "";
+  const seen = new Set();
+
+  snap.forEach((child) => {
     const m = child.val();
-    const div = document.createElement('div');
-    div.className = `msg ${m.name === name ? 'sent' : 'received'}`;
+    const key = `\( {m.name}| \){m.text}|${m.ts || m.time || 0}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    const div = document.createElement("div");
+    div.className = `msg ${m.name === name ? "sent" : "received"}`;
     div.textContent = `${m.name}: ${m.text}`;
     messagesDiv.appendChild(div);
   });
+
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 
 function send() {
   const text = input.value.trim();
   if (!text) return;
+
+  const now = Date.now();
+  if (now - lastSentTime < 1200) return; // blokada spamu ~1.2s
+  lastSentTime = now;
+
   push(messagesRef, {
     name: name,
     text: text,
     ts: serverTimestamp()
   });
-  input.value = '';
+
+  input.value = "";
+  input.blur(); // zapobiega podwójnemu enterowi
 }
 
-input.onkeypress = e => { if (e.key === 'Enter') send(); };
+input.onkeypress = (e) => {
+  if (e.key === "Enter") send();
+};
 </script>
 </body>
 </html>
