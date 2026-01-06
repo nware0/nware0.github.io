@@ -1,78 +1,79 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<title>Chat 2-osobowy (lokalny)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  body{font-family:system-ui,sans-serif; margin:12px; background:#111; color:#eee}
-  #messages{min-height:50vh; max-height:65vh; overflow-y:auto; background:#1a1a1a; padding:10px; border-radius:8px; margin-bottom:10px}
-  .msg{margin:6px 0; padding:8px 12px; border-radius:12px; max-width:82%}
-  .msg.you{background:#0066ff; margin-left:auto}
-  .msg.other{background:#333}
-  #input-area{display:flex; gap:8px}
-  #msg{padding:10px; flex:1; border:none; border-radius:6px; background:#222; color:white}
-  button{padding:0 18px; background:#0066ff; border:none; border-radius:6px; color:white; cursor:pointer}
-  #status{font-size:0.85em; color:#888; min-height:1.2em}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat 2-osobowy</title>
+  <style>
+    body{font-family:system-ui,sans-serif;background:#111;color:#eee;margin:12px}
+    #messages{min-height:50vh;max-height:70vh;overflow-y:auto;background:#1a1a1a;padding:12px;border-radius:8px;margin-bottom:12px}
+    .msg{margin:6px 0;padding:8px 12px;border-radius:12px;max-width:80%}
+    .sent{background:#0066ff;margin-left:auto}
+    .received{background:#333}
+    #input{display:flex;gap:8px}
+    #msg{flex:1;padding:10px;background:#222;border:none;border-radius:6px;color:#fff}
+    button{padding:10px 16px;background:#0066ff;border:none;border-radius:6px;color:#fff;cursor:pointer}
+  </style>
 </head>
 <body>
 
-<h3>Chat lokalny (tylko ta przeglądarka)</h3>
+<h3>Chat prywatny</h3>
 <div id="messages"></div>
-<div id="status"></div>
 
-<div id="input-area">
-  <input id="msg" placeholder="napisz wiadomość..." autocomplete="off">
+<div id="input">
+  <input id="msg" placeholder="Napisz wiadomość..." autocomplete="off">
   <button onclick="send()">Wyślij</button>
 </div>
 
-<script>
-const STORAGE_KEY = 'local-chat-messages';
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getDatabase, ref, push, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBZe0e3wlUFZ3kHaIbj4otPkrIA9aQcwms",
+  authDomain: "indexgithub.firebaseapp.com",
+  databaseURL: "https://indexgithub-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "indexgithub",
+  storageBucket: "indexgithub.appspot.com",
+  messagingSenderId: "653902153990",
+  appId: "1:653902153990:web:5eb71cbb590ca4b2883687"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const messagesRef = ref(db, 'chat');
+
 const messagesDiv = document.getElementById('messages');
 const input = document.getElementById('msg');
-const status = document.getElementById('status');
 
-let myName = localStorage.getItem('chat-my-name') || prompt('Twoja nazwa:') || 'Ja';
-localStorage.setItem('chat-my-name', myName);
+let name = localStorage.getItem('chatName') || prompt('Twoja nazwa (widoczna dla drugiej osoby):') || 'Osoba';
+localStorage.setItem('chatName', name);
 
-let messages = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-
-function render() {
+onValue(messagesRef, snap => {
   messagesDiv.innerHTML = '';
-  messages.forEach(m => {
+  snap.forEach(child => {
+    const m = child.val();
     const div = document.createElement('div');
-    div.className = `msg ${m.name === myName ? 'you' : 'other'}`;
+    div.className = `msg ${m.name === name ? 'sent' : 'received'}`;
     div.textContent = `${m.name}: ${m.text}`;
     messagesDiv.appendChild(div);
   });
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
+});
 
 function send() {
   const text = input.value.trim();
   if (!text) return;
-
-  messages.push({ name: myName, text, ts: Date.now() });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  render();
+  push(messagesRef, {
+    name: name,
+    text: text,
+    ts: serverTimestamp()
+  });
   input.value = '';
 }
 
-function fakeTyping() {
-  status.textContent = 'Druga osoba pisze...';
-  setTimeout(() => status.textContent = '', 1200 + Math.random()*1800);
-}
-
-// wysyłanie enterem
-input.onkeypress = e => { if (e.key === 'Enter') send() };
-
-// symulacja pisania (opcjonalne)
-input.oninput = () => {
-  if (input.value.trim()) fakeTyping();
-};
-
-render();
+input.onkeypress = e => { if (e.key === 'Enter') send(); };
 </script>
 </body>
 </html>
